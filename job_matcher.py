@@ -1,15 +1,40 @@
 import dspy
-import random
 import re
 
+def determine_base_score(job_description):
+    """Assigns a base score based on job seniority."""
+    if any(level in job_description.lower() for level in ["senior", "lead", "director", "manager"]):
+        return 60  # Higher base for senior roles
+    elif any(level in job_description.lower() for level in ["mid", "intermediate", "specialist"]):
+        return 50  # Medium base for mid-level roles
+    else:
+        return 40  # Lower base for junior or entry-level roles
+
+def determine_resume_seniority(experience):
+    """Determines the seniority level of a resume based on job titles and years of experience."""
+    senior_titles = ["senior", "lead", "director", "manager"]
+    mid_titles = ["mid", "specialist", "consultant"]
+    
+    years_of_experience = re.findall(r'(\d+)\s*(?:years?|yrs?)', experience.lower())
+    years_of_experience = max(map(int, years_of_experience), default=0)
+    
+    if any(title in experience.lower() for title in senior_titles) or years_of_experience >= 10:
+        return "Senior"
+    elif any(title in experience.lower() for title in mid_titles) or years_of_experience >= 5:
+        return "Mid-level"
+    else:
+        return "Junior"
+
 class ResumeAnalyzer(dspy.Module):
-    def forward(self, job_description, name, email, skills, education):
+    def forward(self, job_description, name, email, skills, education, experience):
         job_skills = extract_keywords(job_description)
         matching_skills = [skill for skill in skills if any(js in skill.lower() for js in job_skills)]
         skill_match_score = int((len(matching_skills) / max(len(job_skills), 1)) * 100)
         
         # Adjust scoring to vary more based on actual skill matching
-        base_score = random.randint(40, 60)  # Lower base to introduce more variation
+        base_score = determine_base_score(job_description)
+        resume_seniority = determine_resume_seniority(experience)
+        
         skill_weight = 0.7  # Increase skill match impact
         education_bonus = education_score(job_description, education)  # More flexible education scoring
         
@@ -18,9 +43,10 @@ class ResumeAnalyzer(dspy.Module):
         summary = summarize_text(job_description)
         
         # Generate detailed reasoning
-        reasoning = f"The resume received a base score of {base_score}. "
+        reasoning = f"The resume received a base score of {base_score} based on job seniority. "
         reasoning += f"It matched {len(matching_skills)} out of {len(job_skills)} skills from the job description, contributing {int(skill_match_score * skill_weight)} points. "
         reasoning += f"The education match contributed an additional {education_bonus} points. "
+        reasoning += f"The candidate's seniority level is determined as {resume_seniority} based on job titles and experience. "
         reasoning += "Overall, the resume demonstrates a fair alignment with the job requirements."
         
         return f"""
@@ -32,6 +58,7 @@ class ResumeAnalyzer(dspy.Module):
         - Email: {email}
         - Skills: {', '.join(skills)}
         - Education: {education}
+        - Experience Level: {resume_seniority}
         
         Analysis:
         The candidate's resume has been analyzed against the job description.
@@ -79,7 +106,8 @@ def analyze_resume(resume_data, job_description):
     email = resume_data.get("email", "N/A")
     skills = [skill.lower() for skill in resume_data.get("skills", [])]
     education = resume_data.get("education", "N/A")
+    experience = resume_data.get("experience", "N/A")
     
     # Perform analysis
-    analysis_result = model.forward(job_description, name, email, skills, education)
+    analysis_result = model.forward(job_description, name, email, skills, education, experience)
     return analysis_result
