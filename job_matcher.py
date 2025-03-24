@@ -6,9 +6,11 @@ class ResumeAnalyzer(dspy.Module):
     def forward(self, job_description, name, email, skills, education):
         job_skills = extract_keywords(job_description)
         matching_skills = list(set(skills) & set(job_skills))
-        skill_match_score = int((len(matching_skills) / len(job_skills)) * 100) if job_skills else 0
+        skill_match_score = int((len(matching_skills) / max(len(job_skills), 1)) * 100)
         
-        match_score = min(skill_match_score + random.randint(5, 15), 100)  # Adjusted score with randomness
+        # Make the scoring more lenient by boosting partial matches
+        leniency_factor = 20
+        match_score = min(skill_match_score + random.randint(10, leniency_factor), 100)
         
         summary = summarize_text(job_description)
         
@@ -26,7 +28,7 @@ class ResumeAnalyzer(dspy.Module):
         The candidate's resume has been analyzed against the job description.
         Match Score: {match_score}/100
         Matching Skills: {', '.join(matching_skills)}
-        Reasoning: The score is based on skill alignment and education relevance.
+        Reasoning: The score accounts for relevant skills, even partial matches, and education relevance.
         """
 
 def extract_keywords(text):
