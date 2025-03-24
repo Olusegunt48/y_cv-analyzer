@@ -17,6 +17,12 @@ class ResumeAnalyzer(dspy.Module):
         
         summary = summarize_text(job_description)
         
+        # Generate detailed reasoning
+        reasoning = f"The resume received a base score of {base_score}. "
+        reasoning += f"It matched {len(matching_skills)} out of {len(job_skills)} skills from the job description, contributing {int(skill_match_score * skill_weight)} points. "
+        reasoning += f"The education match contributed an additional {education_bonus} points. "
+        reasoning += "Overall, the resume demonstrates a fair alignment with the job requirements."
+        
         return f"""
         Job Description Summary:
         {summary}
@@ -31,7 +37,7 @@ class ResumeAnalyzer(dspy.Module):
         The candidate's resume has been analyzed against the job description.
         Match Score: {match_score}/100
         Matching Skills: {', '.join(matching_skills) if matching_skills else 'Some relevant skills detected'}
-        Reasoning: The score now considers multiple skill matches more accurately, giving credit for all relevant skills and a flexible education match.
+        Reasoning: {reasoning}
         """
 
 def extract_keywords(text):
