@@ -8,10 +8,12 @@ class ResumeAnalyzer(dspy.Module):
         matching_skills = list(set(skills) & set(job_skills))
         skill_match_score = int((len(matching_skills) / max(len(job_skills), 1)) * 100)
         
-        # Make the scoring very lenient by significantly boosting partial matches
-        leniency_factor = 40
-        base_score = random.randint(60, 80)  # Ensuring a generous base score
-        match_score = min(base_score + int(skill_match_score * 0.5), 100)
+        # Adjust scoring to vary more based on actual skill matching
+        base_score = random.randint(40, 60)  # Lower base to introduce more variation
+        skill_weight = 0.7  # Increase skill match impact
+        education_bonus = 10 if education_matches(job_description, education) else 0
+        
+        match_score = min(base_score + int(skill_match_score * skill_weight) + education_bonus, 100)
         
         summary = summarize_text(job_description)
         
@@ -29,7 +31,7 @@ class ResumeAnalyzer(dspy.Module):
         The candidate's resume has been analyzed against the job description.
         Match Score: {match_score}/100
         Matching Skills: {', '.join(matching_skills) if matching_skills else 'Some relevant skills detected'}
-        Reasoning: The evaluation is generous, giving credit for related skills and general experience.
+        Reasoning: The score now considers skill alignment more strongly, with a small bonus for relevant education.
         """
 
 def extract_keywords(text):
@@ -42,6 +44,11 @@ def extract_keywords(text):
 def summarize_text(text, max_length=100):
     """Summarizes the job description to a shorter form."""
     return text[:max_length] + "..." if len(text) > max_length else text
+
+def education_matches(job_description, education):
+    """Checks if the education level is at least close to what is expected."""
+    education_keywords = ["Bachelor", "Master", "PhD", "Degree", "Diploma"]
+    return any(word in job_description for word in education_keywords) and any(word in education for word in education_keywords)
 
 def analyze_resume(resume_data, job_description):
     """Analyzes the resume against the job description using DSPy."""
