@@ -2,7 +2,7 @@ import dspy
 
 def analyze_resume(resume_data, job_description):
     """Analyzes the resume against the job description using DSPy."""
-    model = dspy.Expert()  # Placeholder for an actual DSPy model
+    model = dspy.Predictor()  # Placeholder for an actual DSPy model
     
     # Construct prompt for analysis
     prompt = f"""
