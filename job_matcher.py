@@ -1,23 +1,30 @@
 import dspy
 
+class ResumeAnalyzer(dspy.Module):
+    def forward(self, job_description, name, email, skills, education):
+        return f"""
+        Job Description:
+        {job_description}
+        
+        Candidate Details:
+        - Name: {name}
+        - Email: {email}
+        - Skills: {', '.join(skills)}
+        - Education: {education}
+        
+        Analyze how well this candidate matches the job description and provide a match score (0-100) with reasoning.
+        """
+
 def analyze_resume(resume_data, job_description):
     """Analyzes the resume against the job description using DSPy."""
-    model = dspy.Predictor()  # Placeholder for an actual DSPy model
+    model = ResumeAnalyzer()
     
-    # Construct prompt for analysis
-    prompt = f"""
-    Job Description:
-    {job_description}
+    # Extract structured resume details
+    name = resume_data.get("name", "N/A")
+    email = resume_data.get("email", "N/A")
+    skills = resume_data.get("skills", [])
+    education = resume_data.get("education", "N/A")
     
-    Candidate Details:
-    - Name: {resume_data.get('name', 'N/A')}
-    - Email: {resume_data.get('email', 'N/A')}
-    - Skills: {', '.join(resume_data.get('skills', []))}
-    - Education: {resume_data.get('education', 'N/A')}
-    
-    Analyze how well this candidate matches the job description and provide a match score (0-100) with reasoning.
-    """
-    
-    # Generate analysis using DSPy
-    analysis_result = model(prompt)
+    # Perform analysis
+    analysis_result = model.forward(job_description, name, email, skills, education)
     return analysis_result
