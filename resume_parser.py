@@ -27,7 +27,7 @@ def extract_skills(text):
 
 def extract_education(text):
     """Extracts education details (basic pattern matching)."""
-    education_keywords = ["Bachelor", "Master", "PhD", "University", "Degree"]
+    education_keywords = ["Bachelor", "Master", "PhD", "University", "Degree", "National Diploma"]
     for line in text.split("\n"):
         if any(keyword in line for keyword in education_keywords):
             return line
