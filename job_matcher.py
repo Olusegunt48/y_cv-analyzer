@@ -81,7 +81,7 @@ def extract_keywords(text):
     return list(set(keywords))
 
 
-def summarize_text(text, max_length=100):
+def summarize_text(text, max_length=1000):
     """Summarizes the job description to a shorter form."""
     return text[:max_length] + "..." if len(text) > max_length else text
 
